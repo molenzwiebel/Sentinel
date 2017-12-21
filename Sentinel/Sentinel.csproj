@@ -63,7 +63,9 @@
   <ItemGroup>
     <Compile Include="ActivationHandler.cs" />
     <Compile Include="COMServerHelpers.cs" />
+    <Compile Include="LeagueConnection.cs" />
     <Compile Include="LeagueUtils.cs" />
+    <Compile Include="SimpleJson.cs" />
     <Compile Include="StartMenuHelpers.cs" />
     <Page Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
