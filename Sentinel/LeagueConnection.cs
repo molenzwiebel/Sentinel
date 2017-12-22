@@ -29,8 +29,17 @@ namespace Sentinel
         /**
          * Returns if this connection is currently connected.
          */
-        public bool IsConnected {
+        public bool IsConnected
+        {
             get { return connected; }
+        }
+
+        /**
+         * Returns if the LCU is currently running and focused.
+         */
+        public bool IsFocused
+        {
+            get { return connected && LeagueUtils.IsWindowFocused(processInfo.Item1);  }
         }
 
         /**
@@ -43,6 +52,9 @@ namespace Sentinel
             leaguePollTimer.Interval = 5000;
             leaguePollTimer.Elapsed += TryConnect;
             leaguePollTimer.Start();
+
+            // The timer will only trigger after 5s. We want to connect as soon as possible.
+            TryConnect(null, null);
         }
 
         /**
@@ -117,7 +129,7 @@ namespace Sentinel
             {
                 Path = ev["uri"],
                 Type = ev["eventType"],
-                Data = ev["data"]
+                Data = ev["eventType"] == "Delete" ? null : ev["data"]
             });
         }
 
@@ -130,7 +142,41 @@ namespace Sentinel
 
             var res = await HTTP_CLIENT.GetAsync("https://127.0.0.1:" + processInfo.Item3 + url);
             var stringContent = await res.Content.ReadAsStringAsync();
+
+            if (res.StatusCode == System.Net.HttpStatusCode.NotFound) return null;
             return SimpleJson.DeserializeObject(stringContent);
+        }
+
+        /**
+         * Observes the specified path. The specified handler gets invoked with the initial, current value.
+         * After that, the handler will get invoked whenever the value at the specified URL changes.
+         */
+        public async void Observe(string url, Action<dynamic> handler)
+        {
+            // Listen to new websocket events and handle them if they're appropriate.
+            OnWebsocketEvent += data =>
+            {
+                if (data.Path == url) handler(data.Data);
+            };
+
+            // If we are currently connected, initially populate.
+            // Else, wait for the connect and then initially populate.
+            if (connected)
+            {
+                // We are currently connected, handle it immediately.
+                handler(await Get(url));
+            } else
+            {
+                Action connectHandler = null;
+                connectHandler = async () =>
+                {
+                    OnConnected -= connectHandler;
+                    handler(await Get(url));
+                };
+
+                // Wait for the next connected event.
+                OnConnected += connectHandler;
+            }
         }
 
         /**
