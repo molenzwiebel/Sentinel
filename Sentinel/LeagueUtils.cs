@@ -16,10 +16,10 @@ namespace Sentinel
         private static Regex PORT_REGEX = new Regex("\"--app-port=(\\d+?)\"");
 
         /**
-         * Returns a tuple with the PID, remoting auth token and port of the current league client.
+         * Returns a tuple with the process, remoting auth token and port of the current league client.
          * Returns null if the current league client is not running.
          */
-        public static Tuple<int, string, string> GetLeagueStatus()
+        public static Tuple<Process, string, string> GetLeagueStatus()
         {
             // Find the LeagueClientUx process.
             foreach (Process p in Process.GetProcessesByName("LeagueClientUx"))
@@ -31,8 +31,8 @@ namespace Sentinel
                     string commandLine = (string)moc.OfType<ManagementObject>().First()["CommandLine"];
 
                     // Use regex to extract data, return it.
-                    return new Tuple<int, string, string>(
-                        p.Id,
+                    return new Tuple<Process, string, string>(
+                        p,
                         AUTH_TOKEN_REGEX.Match(commandLine).Groups[1].Value,
                         PORT_REGEX.Match(commandLine).Groups[1].Value
                     );
@@ -44,9 +44,9 @@ namespace Sentinel
         }
 
         /**
-         * Checks if any window created by the specified pid is active. If yes, returns true.
+         * Checks if any window created by the specified process is active. If yes, returns true.
          */
-        public static bool IsWindowFocused(int pid)
+        public static bool IsWindowFocused(Process process)
         {
             var handle = GetForegroundWindow();
             if (handle.ToInt32() == 0) return false;
@@ -54,8 +54,19 @@ namespace Sentinel
             int focusedPid;
             GetWindowThreadProcessId(handle, out focusedPid);
 
-            return focusedPid == pid;
+            return focusedPid == process.Id;
         }
+
+        /**
+         * Focuses the main window of the specified process.
+         */
+        public static void FocusWindow(Process process)
+        {
+            SetForegroundWindow(process.MainWindowHandle);
+        }
+
+        [DllImport("user32.dll")]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
         private static extern IntPtr GetForegroundWindow();

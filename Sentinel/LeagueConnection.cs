@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Security.Authentication;
 using System.Text;
 using System.Threading.Tasks;
 using System.Timers;
@@ -15,11 +17,15 @@ namespace Sentinel
      */
     class LeagueConnection
     {
-        private static HttpClient HTTP_CLIENT = new HttpClient();
+        private static HttpClient HTTP_CLIENT = new HttpClient(new HttpClientHandler()
+        {
+            SslProtocols = SslProtocols.Tls12 | SslProtocols.Tls11 | SslProtocols.Tls,
+            ServerCertificateCustomValidationCallback = (a, b, c, d) => true
+        });
 
         private Timer leaguePollTimer;
         private WebSocket socketConnection;
-        private Tuple<int, string, string> processInfo;
+        private Tuple<Process, string, string> processInfo;
         private bool connected = false;
 
         public event Action OnConnected;
@@ -131,6 +137,17 @@ namespace Sentinel
                 Type = ev["eventType"],
                 Data = ev["eventType"] == "Delete" ? null : ev["data"]
             });
+        }
+
+        /**
+         * Focuses the League client, if it exists.
+         */
+        public void Focus()
+        {
+            Console.WriteLine("Focusing league");
+            if (!connected) return;
+
+            LeagueUtils.FocusWindow(processInfo.Item1);
         }
 
         /**
