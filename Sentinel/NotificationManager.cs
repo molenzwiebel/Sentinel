@@ -51,6 +51,11 @@ namespace Sentinel
                             {
                                 Text = description
                             }
+                        },
+
+                        AppLogoOverride = new ToastGenericAppLogo()
+                        {
+                            Source = "https://avatar.leagueoflegends.com/euw/" + Uri.EscapeUriString(name) + ".png"
                         }
                     },
                 },
@@ -83,14 +88,99 @@ namespace Sentinel
 
             inviteToasts.Remove(id);
 
-            try
+            // Each one of these might throw if the user interacted with them.
+            try { NOTIFIER.Hide(toast); } catch { }
+            try { ToastNotificationManager.History.Remove(toast.Tag); } catch { }
+        }
+
+        /**
+         * Shows a notification for a chat message sent to the player.
+         */
+        public static void ShowChatNotification(string id, string from, string content)
+        {
+            // Get or put the list of toast notifications for this convo
+            var convoMessages = chatToasts[id] = chatToasts.ContainsKey(id) ? chatToasts[id] : new List<ToastNotification>();
+
+            // Hide all previous notifications so we don't build up a way too long queue.
+            // This will not remove them from the notification center.
+            foreach (var existing in convoMessages)
             {
-                NOTIFIER.Hide(toast);
-                ToastNotificationManager.History.Remove(toast.Tag);
-            } catch
-            {
-                // If these were removed by the user, this might not work. We don't really bother.
+                // This will throw if it was already hidden.
+                try { NOTIFIER.Hide(existing); } catch { }
             }
+
+            // Build our toast.
+            ToastContent toastContent = new ToastContent()
+            {
+                Visual = new ToastVisual()
+                {
+                    BindingGeneric = new ToastBindingGeneric()
+                    {
+                        Children =
+                        {
+                            new AdaptiveText()
+                            {
+                                Text = "League of Legends | " + from
+                            },
+
+                            new AdaptiveText()
+                            {
+                                Text = content
+                            }
+                        },
+
+                        AppLogoOverride = new ToastGenericAppLogo()
+                        {
+                            Source = "https://avatar.leagueoflegends.com/euw/" + Uri.EscapeUriString(from) + ".png"
+                        }
+                    },
+                },
+
+                Actions = new ToastActionsCustom()
+                {
+                    Inputs =
+                    {
+                        new ToastTextBox("content")
+                        {
+                            PlaceholderContent = "Type a response..."
+                        }
+                    },
+
+                    Buttons =
+                    {
+                        new ToastButton("Reply", "reply|" + id)
+                        {
+                            TextBoxId = "content"
+                        }
+                    }
+                },
+
+                // Simply focus the league client if nothing is done.
+                Launch = "focus_chat|" + id,
+                ActivationType = ToastActivationType.Foreground
+            };
+
+            var toast = SendNotification(toastContent);
+            convoMessages.Add(toast);
+        }
+
+        /**
+         * Removes all notifications that were shown for the specified conversation id.
+         */
+        public static void HideChatNotifications(string id)
+        {
+            if (!chatToasts.ContainsKey(id)) return;
+
+            var toasts = chatToasts[id];
+            foreach (var toast in toasts)
+            {
+                // These may throw.
+                try { NOTIFIER.Hide(toast); } catch { }
+                try { ToastNotificationManager.History.Remove(toast.Tag); } catch { }
+            }
+
+            toasts.Clear();
+            chatToasts.Remove(id);
         }
 
         /**

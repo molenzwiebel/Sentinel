@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace Sentinel
 {
@@ -19,6 +20,7 @@ namespace Sentinel
             { 460, new Tuple<string, string>("Blind 3v3", "Twisted Treeline") },
             { 470, new Tuple<string, string>("Ranked 3v3", "Twisted Treeline") },
         };
+        private static Regex CONVERSATION_REGEX = new Regex("/lol-chat/v1/conversations/([^/]+)$");
 
         private LeagueConnection league = new LeagueConnection();
 
@@ -26,12 +28,21 @@ namespace Sentinel
         // remove notifications if an invitation gets removed.
         private List<string> invitationIds = new List<string>();
 
+        // Keeps track of our unread message count. If we have unread messages
+        // and they increase, it means that we received a new message that we
+        // need to notify the user for.
+        private Dictionary<string, int> unreadMessageCounts = new Dictionary<string, int>();
+
+        private string activeConversation = null;
+
         public Sentinel()
         {
             league.OnConnected += HandleConnect;
             league.OnDisconnected += HandleDisconnect;
+            league.OnWebsocketEvent += PotentiallyHandleNewMessage;
 
             league.Observe("/lol-lobby/v2/received-invitations", HandleInviteUpdate);
+            league.Observe("/lol-chat/v1/conversations/active", HandleActiveConversationUpdate);
         }
 
         /**
@@ -47,10 +58,25 @@ namespace Sentinel
                     league.Focus();
                     return;
 
-                // Either accept or deny the given invite. Also focus the league client.
+                // Focus the league client and open the specified chat.
+                case "focus_chat":
+                    league.Focus();
+                    league.Put("/lol-chat/v1/conversations/active", "{\"id\":\"" + args[1] + "\"}");
+                    return;
+
+                // Either accept or deny the given invite.
+                // Also focus the league client if we accepted.
                 case "invite":
                     league.Post("/lol-lobby/v2/received-invitations/" + args[1] + "/" + args[2], "");
-                    league.Focus();
+                    if (args[2] != "decline") league.Focus();
+                    return;
+
+                // Reply to the user in the background.
+                case "reply":
+                    league.Post("/lol-chat/v1/conversations/" + args[1] + "/messages", SimpleJson.SerializeObject(new
+                    {
+                        body = values["content"]
+                    }));
                     return;
 
                 default:
@@ -88,7 +114,8 @@ namespace Sentinel
             {
                 if (invite["canAcceptInvitation"] && invite["state"] == "Pending")
                 {
-                    var queueInfo = QUEUES[(int) invite["gameConfig"]["queueId"]];
+                    var queueId = (int) invite["gameConfig"]["queueId"];
+                    var queueInfo = QUEUES.ContainsKey(queueId) ? QUEUES[queueId] : null;
                     var details = queueInfo != null ? queueInfo.Item1 + " - " + queueInfo.Item2 : "Rotating Gamemode";
 
                     NotificationManager.ShowInviteNotification(invite["invitationId"], invite["fromSummonerName"], details);
@@ -98,6 +125,37 @@ namespace Sentinel
                     NotificationManager.HideInviteNotification(invite["invitationId"]);
                 }
             }
+        }
+
+        private void HandleActiveConversationUpdate(dynamic payload)
+        {
+            if (payload == null)
+            {
+                activeConversation = null;
+            } else
+            {
+                // Hide all the notifications for the chat that just became active.
+                activeConversation = payload["id"];
+                NotificationManager.HideChatNotifications(activeConversation);
+            }
+        }
+
+        private void PotentiallyHandleNewMessage(OnWebsocketEventArgs payload)
+        {
+            var match = CONVERSATION_REGEX.Match(payload.Path);
+            if (match == null || !match.Success) return;
+
+            var id = match.Groups[1].Value;
+            if (id == "notify" || id == "active") return;
+
+            // If the number of unread messages increased, it means we have a new message to emit.
+            var lastUnread = unreadMessageCounts.ContainsKey(id) ? unreadMessageCounts[id] : 0;
+            if (lastUnread < payload.Data["unreadMessageCount"] && id != activeConversation)
+            {
+                NotificationManager.ShowChatNotification(id, payload.Data["name"], payload.Data["lastMessage"]["body"]);
+            }
+
+            unreadMessageCounts[id] = (int) payload.Data["unreadMessageCount"];
         }
     }
 }
