@@ -1,5 +1,4 @@
 ﻿using Microsoft.Toolkit.Uwp.Notifications;
-using System;
 using System.Collections.Generic;
 using Windows.Data.Xml.Dom;
 using Windows.UI.Notifications;
@@ -44,7 +43,7 @@ namespace Sentinel
                         {
                             new AdaptiveText()
                             {
-                                Text = "League Of Legends | Invite From " + name
+                                Text = "Invite From " + name
                             },
 
                             new AdaptiveText()
@@ -53,9 +52,9 @@ namespace Sentinel
                             }
                         },
 
-                        AppLogoOverride = new ToastGenericAppLogo()
+                        Attribution = new ToastGenericAttributionText()
                         {
-                            Source = "https://avatar.leagueoflegends.com/euw/" + Uri.EscapeUriString(name) + ".png"
+                            Text = "Via League of Legends"
                         }
                     },
                 },
@@ -120,7 +119,7 @@ namespace Sentinel
                         {
                             new AdaptiveText()
                             {
-                                Text = "League of Legends | " + from
+                                Text = from
                             },
 
                             new AdaptiveText()
@@ -129,9 +128,9 @@ namespace Sentinel
                             }
                         },
 
-                        AppLogoOverride = new ToastGenericAppLogo()
+                        Attribution = new ToastGenericAttributionText()
                         {
-                            Source = "https://avatar.leagueoflegends.com/euw/" + Uri.EscapeUriString(from) + ".png"
+                            Text = "Via League of Legends"
                         }
                     },
                 },

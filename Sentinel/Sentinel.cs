@@ -148,6 +148,9 @@ namespace Sentinel
             var id = match.Groups[1].Value;
             if (id == "notify" || id == "active") return;
 
+            // Ignore anything that is not DMs or club chats.
+            if (payload.Data["type"] != "chat" && payload.Data["type"] != "club") return;
+
             // If the number of unread messages increased, it means we have a new message to emit.
             var lastUnread = unreadMessageCounts.ContainsKey(id) ? unreadMessageCounts[id] : 0;
             if (lastUnread < payload.Data["unreadMessageCount"] && id != activeConversation)

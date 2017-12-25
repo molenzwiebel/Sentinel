@@ -18,11 +18,20 @@ namespace Sentinel
         private App()
         {
             sentinel = new Sentinel();
+
             icon = new NotifyIcon()
             {
                 Text = "Sentinel",
                 Icon = sentinel_icon,
                 Visible = true,
+                ContextMenu = new ContextMenu(new[]
+                {
+                    new MenuItem("Sentinel v0.1")
+                    {
+                        Enabled = false
+                    },
+                    new MenuItem("Quit", (a, b) => Shutdown())
+                })
             };
         }
 
