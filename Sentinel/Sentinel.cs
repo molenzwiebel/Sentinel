@@ -37,6 +37,7 @@ namespace Sentinel
         // need to notify the user for.
         private readonly Dictionary<string, int> unreadMessageCounts = new Dictionary<string, int>();
 
+        private long summonerId = -1;
         private string activeConversation = null;
 
         public Sentinel()
@@ -44,9 +45,11 @@ namespace Sentinel
             league.OnConnected += HandleConnect;
             league.OnDisconnected += HandleDisconnect;
             league.OnWebsocketEvent += PotentiallyHandleNewMessage;
+            league.OnWebsocketEvent += a => { Console.WriteLine(a.Path); Console.WriteLine(a.Data); };
 
             league.Observe("/lol-lobby/v2/received-invitations", HandleInviteUpdate);
             league.Observe("/lol-chat/v1/conversations/active", HandleActiveConversationUpdate);
+            league.Observe("/lol-summoner/v1/current-summoner", summ => summonerId = summ != null ? summ["summonerId"] : -1);
 
             // This will do nothing if the directory already exists.
             Directory.CreateDirectory(IconDir);
@@ -235,7 +238,13 @@ namespace Sentinel
 
             // If the number of unread messages increased, it means we have a new message to emit.
             var lastUnread = unreadMessageCounts.ContainsKey(id) ? unreadMessageCounts[id] : 0;
-            if (lastUnread < payload.Data["unreadMessageCount"] && id != activeConversation)
+
+            // Show a message if the unread counter increased or if we are currently not focused
+            // and our open conversation got a message not sent by us.
+            var shouldShow = (lastUnread < payload.Data["unreadMessageCount"] && id != activeConversation)
+                             || (!league.IsFocused && id == activeConversation && payload.Data["lastMessage"]["fromId"] != summonerId);  
+
+            if (shouldShow)
             {
                 var iconPath = await GetSummonerIconPath(payload.Data["name"]);
                 NotificationManager.ShowChatNotification(
