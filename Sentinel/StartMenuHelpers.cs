@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
-using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
+using IWshRuntimeLibrary;
+using File = System.IO.File;
 
 namespace Sentinel
 {
@@ -15,16 +16,32 @@ namespace Sentinel
         private static string SHORTCUT_PATH = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\Microsoft\\Windows\\Start Menu\\Programs\\Sentinel.lnk";
 
         /**
+         * Checks if a shortcut to Sentinel exists and points to the currently executing exe.
+         */
+        public static bool IsInstalled()
+        {
+            if (!File.Exists(SHORTCUT_PATH)) return false;
+
+            WshShell shell = new WshShell();
+            IWshShortcut link = (IWshShortcut) shell.CreateShortcut(SHORTCUT_PATH);
+
+            Console.WriteLine(link.TargetPath);
+            return link.TargetPath == Process.GetCurrentProcess().MainModule.FileName;;
+        }
+
+        /**
          * Adds a new shortcut for the current program to the start menu, if it doesn't exist yet.
          */
         public static void Install(string appId, Guid handler)
         {
             if (!File.Exists(SHORTCUT_PATH))
             {
-                // Find the path to the current executable
-                var exePath = Process.GetCurrentProcess().MainModule.FileName;
-                InstallShortcut(exePath, appId, handler);
+                File.Delete(SHORTCUT_PATH);
             }
+
+            // Find the path to the current executable
+            var exePath = Process.GetCurrentProcess().MainModule.FileName;
+            InstallShortcut(exePath, appId, handler);
         }
 
         /**

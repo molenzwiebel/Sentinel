@@ -219,7 +219,7 @@ namespace Sentinel
             if (!match.Success) return;
 
             var id = match.Groups[1].Value;
-            if (id == "notify" || id == "active") return;
+            if (id == "notify" || id == "active" || payload.Data == null || payload.Data["lastMessage"] == null) return;
 
             // Ignore anything that is not DMs or club chats.
             if (payload.Data["type"] != "chat" && payload.Data["type"] != "club") return;
