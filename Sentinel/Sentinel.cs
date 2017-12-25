@@ -12,16 +12,6 @@ namespace Sentinel
      */
     class Sentinel
     {
-        private static readonly Dictionary<int, Tuple<string, string>> Queues = new Dictionary<int, Tuple<string, string>>
-        {
-            { 400, new Tuple<string, string>("Draft Pick", "Summoner's Rift") },
-            { 420, new Tuple<string, string>("Ranked Solo", "Summoner's Rift") },
-            { 430, new Tuple<string, string>("Blind Pick", "Summoner's Rift") },
-            { 440, new Tuple<string, string>("Ranked Flex", "Summoner's Rift") },
-            { 450, new Tuple<string, string>("ARAM", "Howling Abyss") },
-            { 460, new Tuple<string, string>("Blind 3v3", "Twisted Treeline") },
-            { 470, new Tuple<string, string>("Ranked 3v3", "Twisted Treeline") },
-        };
         private static readonly Regex ConversationRegex = new Regex("/lol-chat/v1/conversations/([^/]+)$");
         private static readonly string IconDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Sentinel-Icons");
 
@@ -38,14 +28,13 @@ namespace Sentinel
         private readonly Dictionary<string, int> unreadMessageCounts = new Dictionary<string, int>();
 
         private long summonerId = -1;
-        private string activeConversation = null;
+        private string activeConversation;
 
         public Sentinel()
         {
             league.OnConnected += HandleConnect;
             league.OnDisconnected += HandleDisconnect;
             league.OnWebsocketEvent += PotentiallyHandleNewMessage;
-            league.OnWebsocketEvent += a => { Console.WriteLine(a.Path); Console.WriteLine(a.Data); };
 
             league.Observe("/lol-lobby/v2/received-invitations", HandleInviteUpdate);
             league.Observe("/lol-chat/v1/conversations/active", HandleActiveConversationUpdate);
@@ -181,16 +170,15 @@ namespace Sentinel
             {
                 if (invite["canAcceptInvitation"] && invite["state"] == "Pending")
                 {
-                    var queueId = (int) invite["gameConfig"]["queueId"];
-                    var queueInfo = Queues.ContainsKey(queueId) ? Queues[queueId] : null;
-                    var details = queueInfo != null ? queueInfo.Item1 + " - " + queueInfo.Item2 : "Rotating Gamemode";
+                    var queueInfo = await league.Get("/lol-game-queues/v1/queues/" + invite["gameConfig"]["queueId"]);
+                    var mapInfo = await league.Get("/lol-maps/v1/map/" + queueInfo["mapId"]);
                     var iconPath = await GetSummonerIconPath(invite["fromSummonerName"]);
 
                     NotificationManager.ShowInviteNotification(
                         invite["invitationId"],
                         iconPath,
                         invite["fromSummonerName"],
-                        details
+                        mapInfo["name"] + " - " + queueInfo["shortName"]
                     );
                 } else
                 {

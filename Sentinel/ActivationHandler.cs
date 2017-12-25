@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using static Sentinel.COMServerHelpers;
 
@@ -32,13 +31,13 @@ namespace Sentinel
 
         public static void Uninitialize()
         {
-            if (cookie != -1 && regService != null)
+            if (cookie != -1)
             {
-                regService.UnregisterTypeForComClients(cookie);
+                regService?.UnregisterTypeForComClients(cookie);
             }
         }
 
         private static int cookie = -1;
-        private static RegistrationServices regService = null;
+        private static RegistrationServices regService;
     }
 }

@@ -26,7 +26,7 @@ namespace Sentinel
         private readonly Timer leaguePollTimer;
         private WebSocket socketConnection;
         private Tuple<Process, string, string> processInfo;
-        private bool connected = false;
+        private bool connected;
 
         public event Action OnConnected;
         public event Action OnDisconnected;
@@ -82,7 +82,7 @@ namespace Sentinel
             // Connect to our websocket.
             socketConnection = new WebSocket("wss://127.0.0.1:" + status.Item3 + "/", "wamp");
             socketConnection.SetCredentials("riot", status.Item2, true);
-            socketConnection.SslConfiguration.EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12;
+            socketConnection.SslConfiguration.EnabledSslProtocols = SslProtocols.Tls12;
             socketConnection.SslConfiguration.ServerCertificateValidationCallback = (a, b, c, d) => true;
             socketConnection.OnMessage += HandleMessage;
             socketConnection.OnClose += HandleDisconnect;
