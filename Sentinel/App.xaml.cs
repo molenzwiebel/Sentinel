@@ -10,7 +10,7 @@ namespace Sentinel
     /// </summary>
     public partial class App : System.Windows.Application
     {
-        public const string APP_ID = "nl.thijsmolendijk.sentinel";
+        public const string AppId = "nl.thijsmolendijk.sentinel";
 
         private Sentinel sentinel;
         private NotifyIcon icon;
@@ -45,24 +45,21 @@ namespace Sentinel
         }
 
         #region Startup & Singleton
-        private static App instance;
-        public static App Instance
-        {
-            get { return instance; }
-        }
+        private static App _instance;
+        public static App Instance => _instance;
 
         [STAThread]
         public static void Main()
         {
             // Setup start menu and COM server for notifications.
-            StartMenuHelpers.Install(APP_ID, typeof(ActivationHandler).GUID);
+            StartMenuHelpers.Install(AppId, typeof(ActivationHandler).GUID);
             COMServerHelpers.Register(typeof(ActivationHandler).GUID);
             ActivationHandler.Initialize();
 
             // Start the application.
-            instance = new App();
-            instance.InitializeComponent();
-            instance.Run();
+            _instance = new App();
+            _instance.InitializeComponent();
+            _instance.Run();
         }
         #endregion
     }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -22,7 +23,7 @@ namespace Sentinel
             if (!File.Exists(SHORTCUT_PATH))
             {
                 // Find the path to the current executable
-                String exePath = Process.GetCurrentProcess().MainModule.FileName;
+                var exePath = Process.GetCurrentProcess().MainModule.FileName;
                 InstallShortcut(exePath, appId, handler);
             }
         }
@@ -137,21 +138,18 @@ namespace Sentinel
             }
 
             private PROPVARIANT variant;
-            public PROPVARIANT Propvariant
-            {
-                get { return variant; }
-            }
+            public PROPVARIANT Propvariant => variant;
 
             public VarEnum VarType
             {
-                get { return (VarEnum)variant.vt; }
-                set { variant.vt = (ushort)value; }
+                get => (VarEnum)variant.vt;
+                set => variant.vt = (ushort)value;
             }
 
             public void SetValue(Guid value)
             {
                 NativeMethods.PropVariantClear(ref variant);
-                byte[] guid = ((Guid)value).ToByteArray();
+                byte[] guid = value.ToByteArray();
                 variant.vt = (ushort)VarEnum.VT_CLSID;
                 variant.unionmember = Marshal.AllocCoTaskMem(guid.Length);
                 Marshal.Copy(guid, 0, variant.unionmember, guid.Length);

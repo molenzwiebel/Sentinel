@@ -15,7 +15,7 @@ namespace Sentinel
          */
         public static void Register(Guid handler)
         {
-            var registryPath = String.Format("SOFTWARE\\Classes\\CLSID\\{{{0}}}\\LocalServer32", handler);
+            var registryPath = $"SOFTWARE\\Classes\\CLSID\\{{{handler}}}\\LocalServer32";
             var exePath = Process.GetCurrentProcess().MainModule.FileName;
 
             var key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(registryPath);

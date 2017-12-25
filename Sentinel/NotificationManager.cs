@@ -1,14 +1,14 @@
-﻿using Microsoft.Toolkit.Uwp.Notifications;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Windows.Data.Xml.Dom;
 using Windows.UI.Notifications;
+using Microsoft.Toolkit.Uwp.Notifications;
 
 namespace Sentinel
 {
     static class NotificationManager
     {
-        private static ToastNotifier NOTIFIER = ToastNotificationManager.CreateToastNotifier(App.APP_ID);
-        private static int COUNTER = 0;
+        private static ToastNotifier NOTIFIER = ToastNotificationManager.CreateToastNotifier(App.AppId);
+        private static int COUNTER;
 
         private static Dictionary<string, ToastNotification> inviteToasts = new Dictionary<string, ToastNotification>();
         private static Dictionary<string, List<ToastNotification>> chatToasts = new Dictionary<string, List<ToastNotification>>();
@@ -27,39 +27,44 @@ namespace Sentinel
          * Shows a notification for a new game invite. Does nothing if a notification
          * with the specified ID is already shown.
          */
-        public static void ShowInviteNotification(string id, string name, string description)
+        public static void ShowInviteNotification(string id, string icon, string name, string description)
         {
             // Do not show invites twice.
             if (inviteToasts.ContainsKey(id)) return;
 
             // Build our toast.
-            ToastContent toastContent = new ToastContent()
+            ToastContent toastContent = new ToastContent
             {
-                Visual = new ToastVisual()
+                Visual = new ToastVisual
                 {
-                    BindingGeneric = new ToastBindingGeneric()
+                    BindingGeneric = new ToastBindingGeneric
                     {
                         Children =
                         {
-                            new AdaptiveText()
+                            new AdaptiveText
                             {
                                 Text = "Invite From " + name
                             },
 
-                            new AdaptiveText()
+                            new AdaptiveText
                             {
                                 Text = description
                             }
                         },
 
-                        Attribution = new ToastGenericAttributionText()
+                        AppLogoOverride = new ToastGenericAppLogo
+                        {
+                            Source = icon
+                        },
+
+                        Attribution = new ToastGenericAttributionText
                         {
                             Text = "Via League of Legends"
                         }
-                    },
+                    }
                 },
 
-                Actions = new ToastActionsCustom()
+                Actions = new ToastActionsCustom
                 {
                     Buttons =
                     {
@@ -95,7 +100,7 @@ namespace Sentinel
         /**
          * Shows a notification for a chat message sent to the player.
          */
-        public static void ShowChatNotification(string id, string from, string content)
+        public static void ShowChatNotification(string id, string icon, string from, string content)
         {
             // Get or put the list of toast notifications for this convo
             var convoMessages = chatToasts[id] = chatToasts.ContainsKey(id) ? chatToasts[id] : new List<ToastNotification>();
@@ -109,33 +114,38 @@ namespace Sentinel
             }
 
             // Build our toast.
-            ToastContent toastContent = new ToastContent()
+            ToastContent toastContent = new ToastContent
             {
-                Visual = new ToastVisual()
+                Visual = new ToastVisual
                 {
-                    BindingGeneric = new ToastBindingGeneric()
+                    BindingGeneric = new ToastBindingGeneric
                     {
                         Children =
                         {
-                            new AdaptiveText()
+                            new AdaptiveText
                             {
                                 Text = from
                             },
 
-                            new AdaptiveText()
+                            new AdaptiveText
                             {
                                 Text = content
                             }
                         },
 
-                        Attribution = new ToastGenericAttributionText()
+                        AppLogoOverride = new ToastGenericAppLogo
+                        {
+                            Source = icon
+                        },
+
+                        Attribution = new ToastGenericAttributionText
                         {
                             Text = "Via League of Legends"
                         }
-                    },
+                    }
                 },
 
-                Actions = new ToastActionsCustom()
+                Actions = new ToastActionsCustom
                 {
                     Inputs =
                     {
@@ -191,8 +201,10 @@ namespace Sentinel
             var xml = new XmlDocument();
             xml.LoadXml(content.GetContent());
 
-            var toast = new ToastNotification(xml);
-            toast.Tag = "" + COUNTER++;
+            var toast = new ToastNotification(xml)
+            {
+                Tag = "" + COUNTER++
+            };
 
             NOTIFIER.Show(toast);
             return toast;

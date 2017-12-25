@@ -22,13 +22,13 @@ namespace Sentinel
         public static Tuple<Process, string, string> GetLeagueStatus()
         {
             // Find the LeagueClientUx process.
-            foreach (Process p in Process.GetProcessesByName("LeagueClientUx"))
+            foreach (var p in Process.GetProcessesByName("LeagueClientUx"))
             {
                 // Use WMI to figure out its command line.
-                using (ManagementObjectSearcher mos = new ManagementObjectSearcher("SELECT CommandLine FROM Win32_Process WHERE ProcessId = " + p.Id.ToString()))
-                using (ManagementObjectCollection moc = mos.Get())
+                using (var mos = new ManagementObjectSearcher("SELECT CommandLine FROM Win32_Process WHERE ProcessId = " + p.Id.ToString()))
+                using (var moc = mos.Get())
                 {
-                    string commandLine = (string)moc.OfType<ManagementObject>().First()["CommandLine"];
+                    var commandLine = (string) moc.OfType<ManagementObject>().First()["CommandLine"];
 
                     // Use regex to extract data, return it.
                     return new Tuple<Process, string, string>(
@@ -51,9 +51,7 @@ namespace Sentinel
             var handle = GetForegroundWindow();
             if (handle.ToInt32() == 0) return false;
 
-            int focusedPid;
-            GetWindowThreadProcessId(handle, out focusedPid);
-
+            GetWindowThreadProcessId(handle, out var focusedPid);
             return focusedPid == process.Id;
         }
 

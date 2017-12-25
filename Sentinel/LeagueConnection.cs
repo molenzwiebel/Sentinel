@@ -17,13 +17,13 @@ namespace Sentinel
      */
     class LeagueConnection
     {
-        private static HttpClient HTTP_CLIENT = new HttpClient(new HttpClientHandler()
+        private static readonly HttpClient HTTP_CLIENT = new HttpClient(new HttpClientHandler()
         {
             SslProtocols = SslProtocols.Tls12 | SslProtocols.Tls11 | SslProtocols.Tls,
             ServerCertificateCustomValidationCallback = (a, b, c, d) => true
         });
 
-        private Timer leaguePollTimer;
+        private readonly Timer leaguePollTimer;
         private WebSocket socketConnection;
         private Tuple<Process, string, string> processInfo;
         private bool connected = false;
@@ -35,18 +35,12 @@ namespace Sentinel
         /**
          * Returns if this connection is currently connected.
          */
-        public bool IsConnected
-        {
-            get { return connected; }
-        }
+        public bool IsConnected => connected;
 
         /**
          * Returns if the LCU is currently running and focused.
          */
-        public bool IsFocused
-        {
-            get { return connected && LeagueUtils.IsWindowFocused(processInfo.Item1);  }
-        }
+        public bool IsFocused => connected && LeagueUtils.IsWindowFocused(processInfo.Item1);
 
         /**
          * Creates a new LeagueConnection instance. This will immediately start trying
@@ -148,6 +142,18 @@ namespace Sentinel
             if (!connected) return;
 
             LeagueUtils.FocusWindow(processInfo.Item1);
+        }
+
+        /**
+         * Functionally similar to Get, but does not attempt to transform the
+         * result into a JSON object. Instead, it returns the raw bytes.
+         */
+        public async Task<byte[]> GetAsset(string url)
+        {
+            if (!connected) throw new InvalidOperationException("Not connected to LCU");
+
+            var res = await HTTP_CLIENT.GetAsync("https://127.0.0.1:" + processInfo.Item3 + url);
+            return await res.Content.ReadAsByteArrayAsync();
         }
 
         /**
