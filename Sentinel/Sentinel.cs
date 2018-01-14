@@ -224,6 +224,9 @@ namespace Sentinel
             // Ignore anything that is not DMs or club chats.
             if (payload.Data["type"] != "chat" && payload.Data["type"] != "club") return;
 
+            // Stop spamming me if the club is marked as muted.
+            if (payload.Data["type"] == "club" && payload.Data["isMuted"] == true) return;
+
             // If the number of unread messages increased, it means we have a new message to emit.
             var lastUnread = unreadMessageCounts.ContainsKey(id) ? unreadMessageCounts[id] : 0;
 
