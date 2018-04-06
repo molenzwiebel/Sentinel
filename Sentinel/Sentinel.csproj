@@ -136,6 +136,9 @@
     <Compile Include="LeagueUtils.cs" />
     <Compile Include="NotificationManager.cs" />
     <Compile Include="Sentinel.cs" />
+    <Compile Include="SetupWizard.xaml.cs">
+      <DependentUpon>SetupWizard.xaml</DependentUpon>
+    </Compile>
     <Compile Include="SimpleJson.cs" />
     <Compile Include="StartMenuHelpers.cs" />
     <Page Include="App.xaml">
@@ -146,6 +149,10 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="SetupWizard.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">

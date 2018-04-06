@@ -1,0 +1,16 @@
+﻿<Window x:Class="Sentinel.SetupWizard"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Sentinel"
+        mc:Ignorable="d"
+        Title="Sentinel - Setup" Height="221" Width="475" ResizeMode="NoResize">
+    <Grid Margin="0,2,0,15">
+        <Rectangle Fill="#FF9494E8" HorizontalAlignment="Left" Height="40" VerticalAlignment="Top" Width="469"/>
+        <Label x:Name="title" Content="Add To Start Menu" HorizontalAlignment="Left" Margin="4,3,0,0" VerticalAlignment="Top" Foreground="White" FontSize="18" Width="398"/>
+        <TextBlock x:Name="textContents" Margin="10,45,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" HorizontalAlignment="Left" TextAlignment="Justify" Width="449"><Run Text="Welcome to Sentinel! It looks like this is your first time running Sentinel from this location. In order to properly display notifications, Sentinel needs to add itself to the start menu. "/><Run Text="Click OK to do this now, or click cancel to stop Sentinel."/></TextBlock>
+        <Button x:Name="stopButton" Content="Cancel" HorizontalAlignment="Left" Margin="230,149,0,0" VerticalAlignment="Top" Width="75" FontSize="14" Click="stopButton_Click"/>
+        <Button x:Name="nextButton" Content="Add To Start Menu" HorizontalAlignment="Left" Margin="318,149,0,0" VerticalAlignment="Top" Width="141" FontSize="14" Click="nextButton_Click"/>
+    </Grid>
+</Window>

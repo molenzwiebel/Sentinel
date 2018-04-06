@@ -32,6 +32,8 @@ namespace Sentinel
 
         public Sentinel()
         {
+            Console.WriteLine("Constructing Sentinel");
+
             league.OnConnected += HandleConnect;
             league.OnDisconnected += HandleDisconnect;
             league.OnWebsocketEvent += PotentiallyHandleNewMessage;
