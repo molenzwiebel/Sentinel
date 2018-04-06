@@ -93,8 +93,8 @@ namespace Sentinel
             inviteToasts.Remove(id);
 
             // Each one of these might throw if the user interacted with them.
-            try { NOTIFIER.Hide(toast); } catch { }
-            try { ToastNotificationManager.History.Remove(toast.Tag); } catch { }
+            try { NOTIFIER.Hide(toast); } catch { /* ignored */ }
+            try { ToastNotificationManager.History.Remove(toast.Tag); } catch { /* ignored */ }
         }
 
         /**
@@ -104,14 +104,6 @@ namespace Sentinel
         {
             // Get or put the list of toast notifications for this convo
             var convoMessages = chatToasts[id] = chatToasts.ContainsKey(id) ? chatToasts[id] : new List<ToastNotification>();
-
-            // Hide all previous notifications so we don't build up a way too long queue.
-            // This will not remove them from the notification center.
-            foreach (var existing in convoMessages)
-            {
-                // This will throw if it was already hidden.
-                try { NOTIFIER.Hide(existing); } catch { }
-            }
 
             // Build our toast.
             ToastContent toastContent = new ToastContent
@@ -184,8 +176,8 @@ namespace Sentinel
             foreach (var toast in toasts)
             {
                 // These may throw.
-                try { NOTIFIER.Hide(toast); } catch { }
-                try { ToastNotificationManager.History.Remove(toast.Tag); } catch { }
+                try { NOTIFIER.Hide(toast); } catch { /* ignored */ }
+                try { ToastNotificationManager.History.Remove(toast.Tag); } catch { /* ignored */ }
             }
 
             toasts.Clear();
