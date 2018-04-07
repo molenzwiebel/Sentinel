@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="Sentinel - Settings" Height="400" Width="500" ResizeMode="NoResize">
     <Grid>
-        <Image HorizontalAlignment="Left" Height="80" Margin="10,227,0,0" VerticalAlignment="Top" Width="80" Source="Resources/sentinel_icon.ico" />
+        <Image x:Name="Logo" HorizontalAlignment="Left" Height="80" Margin="10,227,0,0" VerticalAlignment="Top" Width="80" />
         <Label Content="Sentinel v1.0.0" HorizontalAlignment="Left" Margin="90,227,0,0" VerticalAlignment="Top" FontSize="24" FontWeight="Bold" FontFamily="Arial"/>
         <Label Content="Made with ♥ by molenzwiebel and contributors." HorizontalAlignment="Left" Margin="90,278,0,0" VerticalAlignment="Top" FontSize="14"/>
         <Label Content="SETTINGS" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" FontSize="16"/>

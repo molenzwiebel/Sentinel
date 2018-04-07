@@ -2,6 +2,9 @@
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
+using System.Windows.Interop;
+using System.Windows.Media.Imaging;
+using static Sentinel.Properties.Resources;
 
 namespace Sentinel
 {
@@ -17,6 +20,7 @@ namespace Sentinel
             InitializeComponent();
 
             Settings = settings;
+            Logo.Source = Imaging.CreateBitmapSourceFromHIcon(sentinel_icon.Handle, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
 
             AllChatsCheckbox.IsChecked = Settings.ShowAllConversations;
             InGameCheckbox.IsChecked = Settings.ShowWhileIngame;
