@@ -12,8 +12,10 @@ namespace Sentinel
      */
     class Sentinel
     {
+        public static readonly string StorageDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Sentinel");
+        public static readonly string SettingsPath = Path.Combine(StorageDir, "settings.bin");
+
         private static readonly Regex ConversationRegex = new Regex("/lol-chat/v1/conversations/([^/]+)$");
-        private static readonly string IconDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Sentinel-Icons");
 
         private readonly LeagueConnection league = new LeagueConnection();
         private readonly Dictionary<string, int> iconCache = new Dictionary<string, int>();
@@ -29,11 +31,10 @@ namespace Sentinel
 
         private long summonerId = -1;
         private string activeConversation;
+        public SentinelSettings settings;
 
         public Sentinel()
         {
-            Console.WriteLine("Constructing Sentinel");
-
             league.OnConnected += HandleConnect;
             league.OnDisconnected += HandleDisconnect;
             league.OnWebsocketEvent += PotentiallyHandleNewMessage;
@@ -43,7 +44,23 @@ namespace Sentinel
             league.Observe("/lol-summoner/v1/current-summoner", summ => summonerId = summ != null ? summ["summonerId"] : -1);
 
             // This will do nothing if the directory already exists.
-            Directory.CreateDirectory(IconDir);
+            Directory.CreateDirectory(StorageDir);
+
+            // Load settings, or use defaults if they don't exist.
+            if (!File.Exists(SettingsPath))
+            {
+                Console.WriteLine("Using default settings");
+                settings = new SentinelSettings();
+            }
+            else
+            {
+                Console.WriteLine("Loading settnigs from file");
+                using (Stream stream = File.Open(SettingsPath, FileMode.Open))
+                {
+                    var binaryFormatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+                    settings = (SentinelSettings) binaryFormatter.Deserialize(stream);
+                }
+            }
         }
 
         /**
@@ -138,7 +155,7 @@ namespace Sentinel
         private async Task<string> GetSummonerIconPath(string name)
         {
             var icon = await GetSummonerIcon(name);
-            var iconPath = Path.Combine(IconDir, icon + ".png");
+            var iconPath = Path.Combine(StorageDir, icon + ".png");
 
             // Download if it does not exist.
             if (!File.Exists(iconPath))
@@ -250,5 +267,19 @@ namespace Sentinel
 
             unreadMessageCounts[id] = (int) payload.Data["unreadMessageCount"];
         }
+    }
+
+    [Serializable]
+    public class SentinelSettings
+    {
+        /**
+         * If we should show all notifications, not just clubs + dms.
+         */
+        public bool ShowAllConversations = false;
+
+        /**
+         * If we should send messages while we're ingame.
+         */
+        public bool ShowWhileIngame = false;
     }
 }

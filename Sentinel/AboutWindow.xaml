@@ -1,0 +1,24 @@
+﻿<Window x:Class="Sentinel.AboutWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Sentinel"
+        mc:Ignorable="d"
+        Title="Sentinel - Settings" Height="400" Width="500" ResizeMode="NoResize">
+    <Grid>
+        <Image HorizontalAlignment="Left" Height="80" Margin="10,227,0,0" VerticalAlignment="Top" Width="80" Source="Resources/sentinel_icon.ico" />
+        <Label Content="Sentinel v1.0.0" HorizontalAlignment="Left" Margin="90,227,0,0" VerticalAlignment="Top" FontSize="24" FontWeight="Bold" FontFamily="Arial"/>
+        <Label Content="Made with ♥ by molenzwiebel and contributors." HorizontalAlignment="Left" Margin="90,278,0,0" VerticalAlignment="Top" FontSize="14"/>
+        <Label Content="SETTINGS" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" FontSize="16"/>
+        <Label Content="ABOUT" HorizontalAlignment="Left" Margin="10,184,0,0" VerticalAlignment="Top" FontSize="16"/>
+        <Button Content="Source Code" Click="OpenGithub" HorizontalAlignment="Left" Margin="10,328,0,0" VerticalAlignment="Top" Width="97" FontSize="14"/>
+        <Button Content="Discord Server" Click="OpenDiscord" HorizontalAlignment="Left" Margin="112,328,0,0" VerticalAlignment="Top" Width="105" FontSize="14"/>
+        <Button Content="Uninstall Sentinel" Click="Uninstall" HorizontalAlignment="Left" Margin="365,328,0,0" VerticalAlignment="Top" Width="119" FontSize="14"/>
+        <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="1" Margin="0,184,-6,0" Stroke="Black" VerticalAlignment="Top" Width="500"/>
+        <CheckBox x:Name="AllChatsCheckbox" Content="Show Lobby/Champion Select Messages" HorizontalAlignment="Left" Margin="10,46,0,0" VerticalAlignment="Top" FontSize="14" />
+        <CheckBox x:Name="InGameCheckbox" Content="Show Notifications While In Game" HorizontalAlignment="Left" Margin="10,121,0,0" VerticalAlignment="Top" FontSize="14"/>
+        <TextBlock HorizontalAlignment="Left" Margin="10,69,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Text="By default, Sentinel only shows notifications for direct messages and club chats. Turn this on to also generate notifications for other chat rooms."/>
+        <TextBlock HorizontalAlignment="Left" Margin="10,144,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Text="Whether notifications should be sent while you are in game."/>
+    </Grid>
+</Window>

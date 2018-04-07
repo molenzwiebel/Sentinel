@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Windows.Forms;
 using static Sentinel.Properties.Resources;
+using ContextMenu = System.Windows.Forms.ContextMenu;
+using MenuItem = System.Windows.Forms.MenuItem;
 
 namespace Sentinel
 {
@@ -22,12 +24,16 @@ namespace Sentinel
                 Text = "Sentinel",
                 Icon = sentinel_icon,
                 Visible = true,
-                ContextMenu = new ContextMenu(new[]
+                ContextMenu = new ContextMenu(new MenuItem[]
                 {
-                    new MenuItem("Sentinel v0.1")
+                    new MenuItem("Sentinel v1.0.0")
                     {
                         Enabled = false
                     },
+                    new MenuItem("Settings", (sender, ev) =>
+                    {
+                        new AboutWindow(sentinel.settings).Show();
+                    }),
                     new MenuItem("Quit", (a, b) => Shutdown())
                 })
             };
