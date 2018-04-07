@@ -37,6 +37,7 @@ namespace Sentinel
                     new MenuItem("Quit", (a, b) => Shutdown())
                 })
             };
+            icon.Click += (a, b) => new AboutWindow(sentinel.settings).Show();
 
             if (!StartMenuHelpers.IsInstalled())
             {
