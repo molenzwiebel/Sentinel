@@ -100,7 +100,7 @@ namespace Sentinel
         /**
          * Shows a notification for a chat message sent to the player.
          */
-        public static void ShowChatNotification(string id, string icon, string from, string content)
+        public static void ShowChatNotification(string id, string icon, string from, string content, bool openChat)
         {
             // Get or put the list of toast notifications for this convo
             var convoMessages = chatToasts[id] = chatToasts.ContainsKey(id) ? chatToasts[id] : new List<ToastNotification>();
@@ -156,9 +156,10 @@ namespace Sentinel
                     }
                 },
 
-                // Simply focus the league client if nothing is done.
-                Launch = "focus_chat|" + id,
-                ActivationType = ToastActivationType.Foreground
+                // Either open the chat or just focus the client, based on the param
+                Launch = openChat ? "focus_chat|" + id : "focus",
+                ActivationType = ToastActivationType.Foreground,
+                Duration = ToastDuration.Short
             };
 
             var toast = SendNotification(toastContent);

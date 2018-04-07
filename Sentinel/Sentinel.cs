@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using WebSocketSharp;
 
 namespace Sentinel
 {
@@ -18,7 +19,7 @@ namespace Sentinel
         private static readonly Regex ConversationRegex = new Regex("/lol-chat/v1/conversations/([^/]+)$");
 
         private readonly LeagueConnection league = new LeagueConnection();
-        private readonly Dictionary<string, int> iconCache = new Dictionary<string, int>();
+        private readonly Dictionary<long, dynamic> summonerCache = new Dictionary<long, dynamic>();
 
         // Keeps track of our invitations, so we can diff and remove
         // remove notifications if an invitation gets removed.
@@ -29,6 +30,7 @@ namespace Sentinel
         // need to notify the user for.
         private readonly Dictionary<string, int> unreadMessageCounts = new Dictionary<string, int>();
 
+        private bool gameClientRunning = false;
         private long summonerId = -1;
         private string activeConversation;
         public SentinelSettings settings;
@@ -41,6 +43,7 @@ namespace Sentinel
 
             league.Observe("/lol-lobby/v2/received-invitations", HandleInviteUpdate);
             league.Observe("/lol-chat/v1/conversations/active", HandleActiveConversationUpdate);
+            league.Observe("/lol-gameflow/v1/session", HandleGameflowUpdate);
             league.Observe("/lol-summoner/v1/current-summoner", summ => summonerId = summ != null ? summ["summonerId"] : -1);
 
             // This will do nothing if the directory already exists.
@@ -49,12 +52,10 @@ namespace Sentinel
             // Load settings, or use defaults if they don't exist.
             if (!File.Exists(SettingsPath))
             {
-                Console.WriteLine("Using default settings");
                 settings = new SentinelSettings();
             }
             else
             {
-                Console.WriteLine("Loading settnigs from file");
                 using (Stream stream = File.Open(SettingsPath, FileMode.Open))
                 {
                     var binaryFormatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
@@ -122,25 +123,24 @@ namespace Sentinel
         }
 
         /**
-         * Asynchronously finds the summoner icon of the specified summoner.
+         * Asynchronously finds the summoner information of the specified summoner.
          */
-        private async Task<int> GetSummonerIcon(string name)
+        private async Task<dynamic> GetSummoner(long summonerId)
         {
             // We make a request regardless of if we already have it cached.
             // Note that we do not await this task (yet). It will run async.
             var task = Task.Run(async () =>
             {
-                var summoner = await league.Get("/lol-summoner/v1/summoners?name=" + Uri.EscapeUriString(name));
-                var icon = (int)summoner["profileIconId"];
-                iconCache[name] = icon;
-                return icon;
+                var summoner = await league.Get("/lol-summoner/v1/summoners/" + summonerId);
+                summonerCache[summonerId] = summoner;
+                return summoner;
             });
 
             // If we had the user cached, return the cached icon.
             // If they changed their icon in the meantime, the task we just started will update it for next time.
-            if (iconCache.ContainsKey(name))
+            if (summonerCache.ContainsKey(summonerId))
             {
-                return iconCache[name];
+                return summonerCache[summonerId];
             }
 
             // If we didn't have it cached, we will have to wait for the operation to return.
@@ -152,9 +152,10 @@ namespace Sentinel
          * to a local version of the icon. This will potentially "download" the icon
          * from the LCU, to store it locally.
          */
-        private async Task<string> GetSummonerIconPath(string name)
+        private async Task<string> GetSummonerIconPath(long summonerId)
         {
-            var icon = await GetSummonerIcon(name);
+            var summoner = await GetSummoner(summonerId);
+            var icon = (int) summoner["profileIconId"];
             var iconPath = Path.Combine(StorageDir, icon + ".png");
 
             // Download if it does not exist.
@@ -191,7 +192,7 @@ namespace Sentinel
                 {
                     var queueInfo = await league.Get("/lol-game-queues/v1/queues/" + invite["gameConfig"]["queueId"]);
                     var mapInfo = await league.Get("/lol-maps/v1/map/" + queueInfo["mapId"]);
-                    var iconPath = await GetSummonerIconPath(invite["fromSummonerName"]);
+                    var iconPath = await GetSummonerIconPath(invite["fromSummonerId"]);
 
                     NotificationManager.ShowInviteNotification(
                         invite["invitationId"],
@@ -240,11 +241,17 @@ namespace Sentinel
             var id = match.Groups[1].Value;
             if (id == "notify" || id == "active" || payload.Data == null || payload.Data["lastMessage"] == null) return;
 
-            // Ignore anything that is not DMs or club chats.
-            if (payload.Data["type"] != "chat" && payload.Data["type"] != "club") return;
+            // We don't care about messages if we're currently ingame and have in-game notifications turned off.
+            if (gameClientRunning && !settings.ShowWhileIngame) return;
+
+            // Ignore anything that is not DMs or club chats, unless we have all messages turned on.
+            if (!settings.ShowAllConversations && payload.Data["type"] != "chat" && payload.Data["type"] != "club") return;
 
             // Stop spamming me if the club is marked as muted.
             if (payload.Data["type"] == "club" && payload.Data["isMuted"] == true) return;
+
+            // If this is a lobby/champselect chat, only send messages if we're not focused.
+            if (payload.Data["type"] != "chat" && payload.Data["type"] != "club" && league.IsFocused) return;
 
             // If the number of unread messages increased, it means we have a new message to emit.
             var lastUnread = unreadMessageCounts.ContainsKey(id) ? unreadMessageCounts[id] : 0;
@@ -256,16 +263,33 @@ namespace Sentinel
 
             if (shouldShow)
             {
-                var iconPath = await GetSummonerIconPath(payload.Data["name"]);
+                var name = (string) payload.Data["name"];
+                if (name.IsNullOrEmpty())
+                {
+                    var summoner = await GetSummoner(payload.Data["lastMessage"]["fromId"]);
+                    name = "Lobby - " + summoner["displayName"];
+                }
+
+                var iconPath = await GetSummonerIconPath(payload.Data["lastMessage"]["fromId"]);
                 NotificationManager.ShowChatNotification(
                     id,
                     iconPath,
-                    payload.Data["name"],
-                    payload.Data["lastMessage"]["body"]
+                    name,
+                    payload.Data["lastMessage"]["body"],
+                    payload.Data["type"] == "chat" || payload.Data["type"] == "club"
                 );
             }
 
             unreadMessageCounts[id] = (int) payload.Data["unreadMessageCount"];
+        }
+
+        /**
+         * Listens to any lol-gameflow updates to check if we're currently in-game or not.
+         */
+        private void HandleGameflowUpdate(dynamic gameflow)
+        {
+            // The game client is running if the gameflow session isn't null and gameClient.running is true.
+            gameClientRunning = gameflow != null && gameflow["gameClient"] != null && gameflow["gameClient"]["running"];
         }
     }
 
