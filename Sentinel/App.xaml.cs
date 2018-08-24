@@ -37,7 +37,12 @@ namespace Sentinel
                     new MenuItem("Quit", (a, b) => Shutdown())
                 })
             };
-            icon.Click += (a, b) => new AboutWindow(sentinel.settings).Show();
+            icon.Click += (a, b) =>
+            {
+                // Only open about if left mouse is used (otherwise right clicking opens both context menu and about).
+                if (b is MouseEventArgs args && args.Button == MouseButtons.Left)
+                    new AboutWindow(sentinel.settings).Show();
+            };
 
             if (!StartMenuHelpers.IsInstalled())
             {
