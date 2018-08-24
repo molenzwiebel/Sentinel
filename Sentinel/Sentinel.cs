@@ -190,15 +190,25 @@ namespace Sentinel
             {
                 if (invite["canAcceptInvitation"] && invite["state"] == "Pending")
                 {
-                    var queueInfo = await league.Get("/lol-game-queues/v1/queues/" + invite["gameConfig"]["queueId"]);
-                    var mapInfo = await league.Get("/lol-maps/v1/map/" + queueInfo["mapId"]);
+                    string queueName;
+                    if ((long) invite["gameConfig"]["queueId"] == -1)
+                    {
+                        queueName = "Custom Game";
+                    }
+                    else
+                    {
+                        var queueInfo = await league.Get("/lol-game-queues/v1/queues/" + invite["gameConfig"]["queueId"]);
+                        queueName = queueInfo["shortName"];
+                    }
+
+                    var mapInfo = await league.Get("/lol-maps/v1/map/" + invite["gameConfig"]["mapId"]);
                     var iconPath = await GetSummonerIconPath(invite["fromSummonerId"]);
 
                     NotificationManager.ShowInviteNotification(
                         invite["invitationId"],
                         iconPath,
                         invite["fromSummonerName"],
-                        mapInfo["name"] + " - " + queueInfo["shortName"]
+                        mapInfo["name"] + " - " + queueName
                     );
                 } else
                 {
