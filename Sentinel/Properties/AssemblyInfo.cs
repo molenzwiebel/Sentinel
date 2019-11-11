@@ -8,9 +8,9 @@ using System.Windows;
 [assembly: AssemblyTitle("Sentinel")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("HP Inc.")]
+[assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("Sentinel")]
-[assembly: AssemblyCopyright("Copyright © HP Inc. 2017")]
+[assembly: AssemblyCopyright("")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
