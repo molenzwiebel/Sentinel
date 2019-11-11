@@ -280,7 +280,7 @@ namespace Sentinel
                     name = "Lobby - " + summoner["displayName"];
                 }
 
-                var iconPath = await GetSummonerIconPath(payload.Data["lastMessage"]["fromId"]);
+                var iconPath = await GetSummonerIconPath(long.Parse(payload.Data["lastMessage"]["fromId"]));
                 NotificationManager.ShowChatNotification(
                     id,
                     iconPath,
