@@ -26,7 +26,7 @@ namespace Sentinel
                 Visible = true,
                 ContextMenu = new ContextMenu(new MenuItem[]
                 {
-                    new MenuItem("Sentinel v1.0.0")
+                    new MenuItem("Sentinel v1.0.1")
                     {
                         Enabled = false
                     },
