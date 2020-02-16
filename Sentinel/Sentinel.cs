@@ -269,18 +269,18 @@ namespace Sentinel
             // Show a message if the unread counter increased or if we are currently not focused
             // and our open conversation got a message not sent by us.
             var shouldShow = (lastUnread < payload.Data["unreadMessageCount"] && id != activeConversation)
-                             || (!league.IsFocused && id == activeConversation && long.Parse(payload.Data["lastMessage"]["fromId"]) != summonerId);  
+                             || (!league.IsFocused && id == activeConversation && payload.Data["lastMessage"]["fromSummonerId"] != summonerId);  
 
             if (shouldShow)
             {
                 var name = (string) payload.Data["name"];
                 if (name.IsNullOrEmpty())
                 {
-                    var summoner = await GetSummoner(long.Parse(payload.Data["lastMessage"]["fromId"]));
+                    var summoner = await GetSummoner(payload.Data["lastMessage"]["fromSummonerId"]);
                     name = "Lobby - " + summoner["displayName"];
                 }
 
-                var iconPath = await GetSummonerIconPath(long.Parse(payload.Data["lastMessage"]["fromId"]));
+                var iconPath = await GetSummonerIconPath(payload.Data["lastMessage"]["fromSummonerId"]);
                 NotificationManager.ShowChatNotification(
                     id,
                     iconPath,
